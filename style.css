@@ -1227,33 +1227,52 @@ body {
     .standings-section {
         height: auto;
         min-height: 450px;
+        min-height: 400px;
+        padding: 10px !important;
     }
 
     .table-wrapper {
-        overflow-y: visible; /* Use page-wide scroll instead of inner scroll */
+        overflow-x: hidden; /* Avoid horizontal scrolling */
+        overflow-y: visible;
     }
 
     .timezone-clocks {
-        display: none; /* Hide dual clock on mobile to save space */
+        display: none; /* Hide dual clock on mobile */
     }
 
-    /* Mobile Table Tuning */
+    /* Mobile Fixed Table Layout to prevent overflow */
     .standings-table {
-        font-size: 0.72rem;
+        table-layout: fixed;
+        width: 100%;
+        font-size: 0.68rem;
     }
 
     .standings-table th, 
     .standings-table td {
-        padding: 5px 3px;
+        padding: 6px 2px !important; /* Extremely tight padding */
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
     }
 
-    .col-rank { width: 35px; }
-    .col-group { width: 35px; }
-    .col-points, .col-gd, .col-gf { width: 35px; }
-    .col-condition { min-width: 180px; }
+    /* Proportional columns (Sum = 100%) */
+    .col-rank { width: 9% !important; }
+    .col-group { width: 9% !important; }
+    .col-team { width: 23% !important; }
+    .col-status { width: 29% !important; }
+    .col-points { width: 10% !important; }
+    .col-gd { width: 10% !important; }
+    .col-gf { width: 10% !important; }
 
     .col-condition {
         display: none !important;
+    }
+
+    /* Mobile Status Badges adjustment */
+    .status-badge {
+        padding: 1px 3px !important;
+        font-size: 0.6rem !important;
+        letter-spacing: -0.02em;
     }
 
     .standings-table tbody tr:not(.row-korea) {
@@ -1262,9 +1281,10 @@ body {
 
     .row-detail-mobile td {
         background: #f8fafc !important;
-        padding: 10px 12px !important;
+        padding: 8px 10px !important;
         text-align: left !important;
         border-bottom: 1px solid var(--border-light);
+        white-space: normal !important; /* Allow wraps inside details */
     }
 
     .mobile-cond-container {
@@ -1278,8 +1298,8 @@ body {
     }
 
     .team-flag-img {
-        width: 15px;
-        height: 10px;
+        width: 14px;
+        height: 9px;
         margin-right: 2px;
     }
 }
