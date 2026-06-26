@@ -910,6 +910,68 @@
             }
             tr.appendChild(tdCond);
 
+            // Accordion click toggle logic for mobile viewport
+            if (!team.isKorea) {
+                tr.addEventListener('click', function () {
+                    if (window.innerWidth > 768) return; // Keep default layout on desktop
+
+                    const nextRow = tr.nextElementSibling;
+                    if (nextRow && nextRow.classList.contains('row-detail-mobile')) {
+                        // Already open, close it
+                        nextRow.remove();
+                    } else {
+                        // Close any other open mobile details first
+                        document.querySelectorAll('.row-detail-mobile').forEach(r => r.remove());
+
+                        // Create detailed accordion row
+                        const detailTr = document.createElement('tr');
+                        detailTr.classList.add('row-detail-mobile');
+
+                        const detailTd = document.createElement('td');
+                        detailTd.setAttribute('colspan', '7'); // Rank, Group, Team, Status, Pts, GD, GF = 7 columns
+
+                        let condHtml = '';
+                        if (team.isFinished) {
+                            const textClass = cond.met === true ? 'text-met' : 'text-failed';
+                            const icon = cond.met === true ? '✅' : '❌';
+                            const statusLabel = cond.met === true ? '충족' : '실패';
+                            condHtml = `<div class="mobile-cond-container cond-simple-text ${textClass}">${icon} <strong>${statusLabel}</strong>: ${cond.text}</div>`;
+                        } else if (cond) {
+                            const condClass = cond.met === true ? 'cond-met' : cond.met === false ? 'cond-failed' : 'cond-pending';
+                            const icon = cond.met === true ? '✅' : cond.met === false ? '❌' : '⏳';
+                            const statusLabel = cond.met === true ? '충족' : cond.met === false ? '실패' : '미확정';
+
+                            condHtml = `<div class="mobile-cond-container cond-wrapper ${condClass}">`;
+                            condHtml += `<div class="cond-status">${icon} <strong>${statusLabel}</strong></div>`;
+                            condHtml += `<div class="cond-detail" style="font-size: 0.72rem; margin-bottom: 5px;">${cond.text}</div>`;
+
+                            if (team.possibleThirds) {
+                                condHtml += `<div class="cond-candidates">`;
+                                team.possibleThirds.forEach(p => {
+                                    const pInfo = TEAM_DB[p.team_id];
+                                    const microClass = p.wins === p.scenariosCount ? 'badge-micro-success' : (p.losses === p.scenariosCount ? 'badge-micro-failed' : 'badge-micro-pending');
+                                    const microLabel = p.wins === p.scenariosCount ? '우위' : (p.losses === p.scenariosCount ? '열세' : '경합');
+                                    const condSummary = getCandidateSummaryText(p);
+
+                                    condHtml += `<div class="candidate-row" style="padding: 2px 0;">`;
+                                    const candFlagUrl = getTeamFlagUrl(p.team_id);
+                                    condHtml += `<span class="candidate-team"><img src="${candFlagUrl}" class="team-flag-img" alt="${pInfo?.ko}"> ${pInfo?.ko || '?'}</span>`;
+                                    condHtml += `<span class="candidate-cond-text" style="font-size: 0.65rem;">${condSummary}</span>`;
+                                    condHtml += `<span class="candidate-badge-micro ${microClass}">${microLabel}</span>`;
+                                    condHtml += `</div>`;
+                                });
+                                condHtml += `</div>`;
+                            }
+                            condHtml += `</div>`;
+                        }
+
+                        detailTd.innerHTML = condHtml;
+                        detailTr.appendChild(detailTd);
+                        tr.parentNode.insertBefore(detailTr, tr.nextSibling);
+                    }
+                });
+            }
+
             standingsTbody.appendChild(tr);
         });
 
