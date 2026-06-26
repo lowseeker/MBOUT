@@ -1380,7 +1380,7 @@
             coachImg.style.opacity = '0';
             coachImg.style.transform = 'scale(0.9)';
             setTimeout(() => {
-                coachImg.src = stage.img;
+                coachImg.src = stage.img + '?v=20260627_caricature';
                 coachImg.onload = () => {
                     coachImg.style.opacity = '1';
                     coachImg.style.transform = 'scale(1)';
