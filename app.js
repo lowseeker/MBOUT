@@ -120,7 +120,8 @@
         autoRefetch: true,
         apiRequests: 0,
         apiResponseTime: 0,
-        countdown: 60
+        countdown: 60,
+        forceRefetchToken: ''
     };
 
     // ===== Initialize =====
@@ -164,10 +165,11 @@
             if (e.key === 'settings') {
                 try {
                     const oldSource = settings.dataSource;
+                    const oldToken = settings.forceRefetchToken;
                     const newSettings = JSON.parse(e.newValue);
                     if (newSettings) {
                         settings = Object.assign(settings, newSettings);
-                        if (settings.dataSource !== oldSource) {
+                        if (settings.dataSource !== oldSource || settings.forceRefetchToken !== oldToken) {
                             fetchAllData();
                         }
                     }
@@ -197,6 +199,60 @@
 
             allGroupsData = await groupsRes.json();
             allGamesData = await gamesRes.json();
+
+            // Normalize allGroupsData
+            let groupsArray = [];
+            if (Array.isArray(allGroupsData)) {
+                groupsArray = allGroupsData;
+            } else if (allGroupsData && Array.isArray(allGroupsData.groups)) {
+                groupsArray = allGroupsData.groups;
+            } else if (allGroupsData && typeof allGroupsData === 'object') {
+                for (const key in allGroupsData) {
+                    if (Array.isArray(allGroupsData[key])) {
+                        groupsArray = allGroupsData[key];
+                        break;
+                    }
+                }
+            }
+
+            // Normalize each group: ensure both 'name' and 'group' are set, and 'teams' exists
+            groupsArray = groupsArray.map(g => {
+                const groupName = g.name || g.group || '';
+                return {
+                    name: groupName,
+                    group: groupName,
+                    teams: (g.teams || []).map(t => {
+                        return {
+                            team_id: String(t.team_id),
+                            mp: String(t.mp || '0'),
+                            w: String(t.w || '0'),
+                            d: String(t.d || '0'),
+                            l: String(t.l || '0'),
+                            pts: String(t.pts || '0'),
+                            gf: String(t.gf || '0'),
+                            ga: String(t.ga || '0'),
+                            gd: String(t.gd || '0')
+                        };
+                    })
+                };
+            });
+            allGroupsData = { groups: groupsArray };
+
+            // Normalize allGamesData
+            let gamesArray = [];
+            if (Array.isArray(allGamesData)) {
+                gamesArray = allGamesData;
+            } else if (allGamesData && Array.isArray(allGamesData.games)) {
+                gamesArray = allGamesData.games;
+            } else if (allGamesData && typeof allGamesData === 'object') {
+                for (const key in allGamesData) {
+                    if (Array.isArray(allGamesData[key])) {
+                        gamesArray = allGamesData[key];
+                        break;
+                    }
+                }
+            }
+            allGamesData = { games: gamesArray };
 
             apiCallCount += 2;
             const elapsed = Math.round(performance.now() - startTime);
@@ -1172,30 +1228,63 @@
             return `승점 ${candidate.currentPts}점 이상 확정 (열세)`;
         }
 
-        if (candidate.currentPts === 2) {
-            return '무승부 이하 시 우위, 승리 시 열세';
+        // Helper to check if Korea is ahead of a team with given stats
+        function isKoreaAhead(pts, gd, gf) {
+            if (koreaStats.pts > pts) return true;
+            if (koreaStats.pts < pts) return false;
+            if (koreaStats.gd > gd) return true;
+            if (koreaStats.gd < gd) return false;
+            if (koreaStats.gf > gf) return true;
+            if (koreaStats.gf < gf) return false;
+            return true; 
         }
-        if (candidate.currentPts === 1) {
-            return '무승부 이하 시 우위, 승리 시 열세';
-        }
+
         if (candidate.currentPts === 3) {
-            return '패배 및 득실차 하락 시 우위';
-        }
-        if (candidate.currentPts === 0) {
-            let minMargin = null;
+            let minLossMargin = null;
             for (let m = 1; m <= 20; m++) {
-                const finalGd = candidate.currentGd + m;
-                const finalGf = candidate.currentGf + m;
-                if (finalGd > koreaStats.gd || (finalGd === koreaStats.gd && finalGf > koreaStats.gf)) {
-                    minMargin = m;
+                const finalGd = candidate.currentGd - m;
+                if (isKoreaAhead(3, finalGd, candidate.currentGf)) {
+                    minLossMargin = m;
                     break;
                 }
             }
-            if (minMargin !== null) {
-                if (minMargin === 1) {
+            if (minLossMargin !== null) {
+                if (minLossMargin === 1) {
+                    return '패배 시 우위, 무승부 이상 시 열세';
+                }
+                return `${minLossMargin}골 차 이상 패배 시 우위`;
+            }
+            return '패배 시 우위, 무승부 이상 시 열세';
+        }
+
+        if (candidate.currentPts === 2) {
+            // Draw gives them 3 points. Let's see if Korea is still ahead.
+            if (isKoreaAhead(3, candidate.currentGd, candidate.currentGf)) {
+                return '무승부 이하 시 우위, 승리 시 열세';
+            } else {
+                return '패배 시 우위, 무승부 이상 시 열세';
+            }
+        }
+
+        if (candidate.currentPts === 1) {
+            return '무승부 이하 시 우위, 승리 시 열세';
+        }
+
+        if (candidate.currentPts === 0) {
+            let minWinMargin = null;
+            for (let m = 1; m <= 20; m++) {
+                const finalGd = candidate.currentGd + m;
+                const finalGf = candidate.currentGf + m;
+                if (!isKoreaAhead(3, finalGd, finalGf)) {
+                    minWinMargin = m;
+                    break;
+                }
+            }
+            if (minWinMargin !== null) {
+                if (minWinMargin === 1) {
                     return '무승부 이하 시 우위';
                 }
-                return `무승부 이하 또는 ${minMargin - 1}골 차 이하 승리 시 우위`;
+                return `무승부 이하 또는 ${minWinMargin - 1}골 차 이하 승리 시 우위`;
             }
             return '무승부 이하 시 우위, 승리 시 득실 비교';
         }
