@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="대한민국 32강 진출 확률 대시보드 - 시뮬레이터 및 API 제어판">
+    <title>🔮 홍명보호 진출 시뮬레이터 & 설정 제어판</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260626_2">
+</head>
+<body class="control-page-body">
+    <!-- Header -->
+    <header class="main-header control-header">
+        <div class="header-left">
+            <span class="header-flag">⚙️</span>
+            <h1>홍명보호 진출 시뮬레이터 & 설정 제어판</h1>
+        </div>
+        <div class="header-right">
+            <span class="status-indicator-sync">
+                <span class="sync-dot"></span>
+                실시간 연동 중
+            </span>
+        </div>
+    </header>
+
+    <div class="control-container">
+        <!-- Settings & API Control -->
+        <section class="card sidebar-card api-control-card">
+            <h3>⚙️ Settings & API Control</h3>
+            <div class="control-group">
+                <label>Data Source</label>
+                <select id="data-source-select">
+                    <option value="api-football" selected>API-Football (v3)</option>
+                    <option value="worldcup26">worldcup26.ir</option>
+                    <option value="football-data">football-data.org</option>
+                    <option value="sportmonks">Sportmonks</option>
+                </select>
+            </div>
+            <div class="api-stats">
+                <div class="stat-row">
+                    <span class="stat-label">API Requests:</span>
+                    <span class="stat-value" id="api-request-count">0 calls</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Avg. Response:</span>
+                    <span class="stat-value" id="api-response-time">0ms</span>
+                </div>
+            </div>
+            <div class="refetch-control">
+                <div class="refetch-header">
+                    <span>Automatic Refetch:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-refetch-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="refetch-info">
+                    <span>Every 60 seconds</span>
+                    <span class="countdown" id="refetch-countdown">60s left</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simulator Card -->
+        <section class="card sidebar-card simulator-card">
+            <div class="simulator-header">
+                <h3>🔮 잔여 경기 결과 모의 입력 (Simulator)</h3>
+                <button id="reset-sim-btn" class="reset-btn">초기화</button>
+            </div>
+            <div class="simulator-grid" id="simulator-match-inputs">
+                <div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 15px;">잔여 경기 로드 중...</div>
+            </div>
+        </section>
+
+        <!-- Log Console -->
+        <section class="card sidebar-card console-card">
+            <h3>📋 Log Console</h3>
+            <div class="console-output" id="console-output">
+                <!-- Log entries go here -->
+            </div>
+        </section>
+    </div>
+
+    <script src="control.js?v=20260626_2"></script>
+</body>
+</html>

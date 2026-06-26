@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="2026 FIFA 월드컵 대한민국 국가대표팀 홍명보호 32강 진출 확률 실시간 대시보드">
+    <title>🇰🇷 대한민국 32강 진출 실시간 계산 보드</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260626_2">
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-left">
+            <span class="header-flag">🇰🇷</span>
+            <h1>대한민국 32강 진출 실시간 계산 보드</h1>
+        </div>
+        <div class="header-right">
+            <button id="open-control-btn" class="control-btn">🔮 시뮬레이터 제어판 열기</button>
+            <span class="live-badge">
+                <span class="live-dot"></span>
+                LIVE
+            </span>
+            <div class="timezone-clocks">
+                <span class="clock-item">🇰🇷 KST <span id="kst-time">--:--:--</span></span>
+                <span class="clock-divider">|</span>
+                <span class="clock-item">🇲🇽 MEX <span id="mex-time">--:--:--</span></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- Top Section: Left Column (Probability + Matches) & Right Column (Standings) -->
+        <div class="top-dashboard">
+            
+            <!-- Left Column: Probability & Upcoming Matches -->
+            <div class="left-dashboard-column">
+                
+                <!-- Probability Gauge + Coach Expression (Compact) -->
+                <section class="card probability-section">
+                    <div class="section-title-bar">
+                        <span class="section-indicator"></span>
+                        <h2>진출 확률 & 띵보 상태 <span class="subtitle-en">(PROBABILITY & STATUS)</span></h2>
+                    </div>
+
+                    <div class="probability-content-vertical">
+                        <!-- Coach Expression Area -->
+                        <div class="coach-area-compact">
+                            <div class="coach-image-wrapper" id="coach-image-wrapper">
+                                <img src="assets/images/hong-fiftyfifty.png" alt="홍명보 띵보 상태" id="coach-expression-img" class="coach-img">
+                                <div class="expression-overlay" id="expression-overlay"></div>
+                            </div>
+                            <div class="coach-status">
+                                <span class="status-label">띵보 상태</span>
+                                <span class="status-text" id="expression-status-text">반반</span>
+                            </div>
+                        </div>
+
+                        <!-- Gauge Area -->
+                        <div class="gauge-area-compact">
+                            <div class="probability-display-compact">
+                                <span class="prob-label">현재 진출 확률:</span>
+                                <span class="prob-value" id="probability-value">0.0</span>
+                                <span class="prob-percent">%</span>
+                            </div>
+
+                            <div class="gauge-track-wrapper">
+                                <div class="gauge-labels-compact">
+                                    <span>0%</span>
+                                    <span>50%</span>
+                                    <span>100%</span>
+                                </div>
+                                <div class="gauge-track">
+                                    <div class="gauge-bar" id="gauge-bar">
+                                        <div class="gauge-glow"></div>
+                                    </div>
+                                    <div class="gauge-pointer" id="gauge-pointer">
+                                        <div class="pointer-line"></div>
+                                        <div class="pointer-value" id="gauge-value-tip">0%</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="gauge-zones-compact">
+                                <span class="zone-compact zone-eliminated">탈락</span>
+                                <span class="zone-compact zone-crisis">위기</span>
+                                <span class="zone-compact zone-fiftyfifty">반반</span>
+                                <span class="zone-compact zone-positive">긍정</span>
+                                <span class="zone-compact zone-qualified">진출</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Scenario Modeling & Upcoming Matches -->
+                <section class="card scenario-card">
+                    <div class="section-title-bar">
+                        <span class="section-indicator"></span>
+                        <h2>주요 잔여 매치업 & 경우의 수 <span class="subtitle-en">(UPCOMING MATCHES)</span></h2>
+                    </div>
+
+                    <div class="match-list" id="scenario-match-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: 3rd Place Standings Table -->
+            <section class="card standings-section">
+                <div class="standings-header">
+                    <div class="section-title-bar">
+                        <span class="section-indicator"></span>
+                        <h2>다른 조 3위 실시간 상황 <span class="subtitle-en">(GROUP 3RD PLACE STANDINGS)</span></h2>
+                    </div>
+                    <div class="standings-summary" id="standings-summary">
+                        <span class="summary-item above">
+                            홍명보호보다 위: <strong id="teams-above">0</strong>팀
+                        </span>
+                        <span class="summary-divider">/</span>
+                        <span class="summary-item below">
+                            아래: <strong id="teams-below">0</strong>팀
+                        </span>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="standings-table" id="standings-table">
+                        <thead>
+                            <tr>
+                                <th class="col-rank">순위<br><span class="th-sub">RANK</span></th>
+                                <th class="col-group">조<br><span class="th-sub">GROUP</span></th>
+                                <th class="col-team">팀<br><span class="th-sub">TEAM</span></th>
+                                <th class="col-status">상황<br><span class="th-sub">STATUS</span></th>
+                                <th class="col-points">승점<br><span class="th-sub">PTS</span></th>
+                                <th class="col-gd">득실차<br><span class="th-sub">GD</span></th>
+                                <th class="col-gf">다득점<br><span class="th-sub">GF</span></th>
+                                <th class="col-condition">한국보다 뒤지는 조건<br><span class="th-sub">CONDITION</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=20260626_2"></script>
+</body>
+</html>
