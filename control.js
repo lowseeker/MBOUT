@@ -85,7 +85,8 @@
         autoRefetch: true,
         apiRequests: 0,
         apiResponseTime: 0,
-        countdown: 60
+        countdown: 60,
+        forceRefetchToken: ''
     };
 
     // ===== Initialize =====
@@ -138,10 +139,21 @@
             addLog(`설정 변경: 자동 새로고침 → ${this.checked ? 'ON' : 'OFF'}`);
         });
 
+        const forceRefetchBtn = $('force-refetch-btn');
+        if (forceRefetchBtn) {
+            forceRefetchBtn.addEventListener('click', function () {
+                settings.forceRefetchToken = String(Date.now());
+                saveSettings();
+                addLog('🔄 수동 API 데이터 동기화 요청 (메인 화면에서 리프레시)');
+            });
+        }
+
         resetSimBtn.addEventListener('click', function () {
             predictions = {};
             localStorage.setItem('predictions', JSON.stringify(predictions));
-            addLog('🔮 모의 입력 데이터 초기화 완료 (메인화면 동기화)');
+            settings.forceRefetchToken = String(Date.now());
+            saveSettings();
+            addLog('🔮 모의 입력 데이터 초기화 완료 (메인화면 동기화 & API 재호출)');
             renderSimulatorList();
         });
     }
@@ -192,6 +204,23 @@
         try {
             const res = await fetch(`${API_BASE}/get/games`);
             allGamesData = await res.json();
+
+            // Normalize games data
+            let gamesArray = [];
+            if (Array.isArray(allGamesData)) {
+                gamesArray = allGamesData;
+            } else if (allGamesData && Array.isArray(allGamesData.games)) {
+                gamesArray = allGamesData.games;
+            } else if (allGamesData && typeof allGamesData === 'object') {
+                for (const key in allGamesData) {
+                    if (Array.isArray(allGamesData[key])) {
+                        gamesArray = allGamesData[key];
+                        break;
+                    }
+                }
+            }
+            allGamesData = { games: gamesArray };
+
             renderSimulatorList();
         } catch (err) {
             addLog(`❌ 제어판 API 오류: ${err.message}. 데모 경기 목록 로드`);
