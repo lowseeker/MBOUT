@@ -991,6 +991,51 @@
         return `${kMonth}/${kDay} ${kHour}:${kMinute} (한국)`;
     }
 
+    function getGameStartTimeMs(game) {
+        if (!game || !game.local_date) return 0;
+        try {
+            const parts = game.local_date.split(' ');
+            const dateParts = parts[0].split('/');
+            const timeParts = parts[1].split(':');
+            
+            const month = parseInt(dateParts[0]) - 1;
+            const day = parseInt(dateParts[1]);
+            const year = parseInt(dateParts[2]);
+            const hour = parseInt(timeParts[0]);
+            const minute = parseInt(timeParts[1]);
+            
+            const offset = STADIUM_OFFSETS[game.stadium_id] || -6;
+            
+            const localTimeMs = Date.UTC(year, month, day, hour, minute);
+            const utcTimeMs = localTimeMs - (offset * 3600000);
+            return utcTimeMs;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    function shouldFetchAPI() {
+        if (!allGamesData || !allGamesData.games) return false;
+        
+        const nowMs = Date.now();
+        const FIVE_MINUTES_MS = 5 * 60 * 1000;
+        const END_THRESHOLD_MS = 150 * 60 * 1000; 
+
+        return allGamesData.games.some(game => {
+            if (game.type !== 'group') return false;
+            
+            const startTimeMs = getGameStartTimeMs(game);
+            if (startTimeMs === 0) return false;
+
+            const isBeforeGame = nowMs >= (startTimeMs - FIVE_MINUTES_MS) && nowMs < startTimeMs;
+            const isLive = game.finished !== 'TRUE' && nowMs >= startTimeMs && nowMs < (startTimeMs + 120 * 60 * 1000);
+            const isJustFinished = game.finished === 'TRUE' && nowMs >= startTimeMs && nowMs <= (startTimeMs + END_THRESHOLD_MS);
+            const isLiveState = game.finished === 'FALSE' && game.time_elapsed !== 'notstarted';
+
+            return isBeforeGame || isLive || isJustFinished || isLiveState;
+        });
+    }
+
     // ===== Get Group Status Badge HTML =====
     function getGroupStatusHtml(groupName, isKorea, isFinished, simGames) {
         if (isKorea) {
@@ -1226,11 +1271,15 @@
     function startCountdown() {
         setInterval(() => {
             if (settings.autoRefetch) {
-                settings.countdown = (settings.countdown || 60) - 1;
-                if (settings.countdown <= 0) {
-                    settings.countdown = 60;
-                    addLog('자동 새로고침 트리거됨...');
-                    fetchAllData();
+                if (shouldFetchAPI()) {
+                    settings.countdown = (parseInt(settings.countdown) || 60) - 1;
+                    if (settings.countdown <= 0) {
+                        settings.countdown = 60;
+                        addLog('자동 새로고침 트리거됨...');
+                        fetchAllData();
+                    }
+                } else {
+                    settings.countdown = '대기 (경기 없음)';
                 }
                 saveSettings();
             }
