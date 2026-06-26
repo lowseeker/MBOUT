@@ -266,10 +266,10 @@
                     { team_id: '24', mp: '3', pts: '1', gd: '-4', gf: '2' }
                 ]},
                 { name: 'G', teams: [
-                    { team_id: '25', mp: '2', pts: '4', gd: '1', gf: '3' },
-                    { team_id: '26', mp: '2', pts: '3', gd: '0', gf: '3' },
-                    { team_id: '27', mp: '2', pts: '2', gd: '0', gf: '2' },
-                    { team_id: '28', mp: '2', pts: '1', gd: '-1', gf: '2' }
+                    { team_id: '26', mp: '2', pts: '4', gd: '1', gf: '3' }, // Egypt (Promoted to 1st)
+                    { team_id: '25', mp: '2', pts: '2', gd: '0', gf: '2' }, // Belgium (Corrected to 2 Draws)
+                    { team_id: '27', mp: '2', pts: '2', gd: '0', gf: '2' }, // Iran (2 Draws)
+                    { team_id: '28', mp: '2', pts: '1', gd: '-1', gf: '2' } // New Zealand (1 Draw 1 Loss)
                 ]},
                 { name: 'H', teams: [
                     { team_id: '29', mp: '2', pts: '4', gd: '2', gf: '3' },
@@ -738,21 +738,43 @@
                 return;
             }
 
-            let minMargin = null;
-            for (let m = 1; m <= 20; m++) {
-                const finalGd = cand.currentGd + m;
-                const finalGf = cand.currentGf + m;
-                if (finalGd > koreaStats.gd || (finalGd === koreaStats.gd && finalGf > koreaStats.gf)) {
-                    minMargin = m;
-                    break;
+            // Check if a draw (1 pt) is already enough to overtake Korea (pts: 3, gd: -1, gf: 2)
+            const drawPts = cand.currentPts + 1;
+            const drawGd = cand.currentGd;
+            const drawGf = cand.currentGf;
+            
+            let isDrawEnoughToOvertake = false;
+            if (drawPts > koreaStats.pts) {
+                isDrawEnoughToOvertake = true;
+            } else if (drawPts === koreaStats.pts) {
+                if (drawGd > koreaStats.gd) {
+                    isDrawEnoughToOvertake = true;
+                } else if (drawGd === koreaStats.gd && drawGf > koreaStats.gf) {
+                    isDrawEnoughToOvertake = true;
                 }
             }
 
-            if (minMargin !== null) {
-                if (minMargin === 1) {
-                    parts.push(`${name} 무승부 이하`);
-                } else {
-                    parts.push(`${name} ${minMargin - 1}골 차 이하 승리 또는 무승부 이하`);
+            if (isDrawEnoughToOvertake) {
+                // If a draw is enough to overtake us, they must LOSE (defeat) for us to stay ahead
+                parts.push(`${name} 패배`);
+            } else {
+                // Otherwise, they need to win to overtake us, so we stay ahead if they draw or lose
+                let minMargin = null;
+                for (let m = 1; m <= 20; m++) {
+                    const finalGd = cand.currentGd + m;
+                    const finalGf = cand.currentGf + m;
+                    if (finalGd > koreaStats.gd || (finalGd === koreaStats.gd && finalGf > koreaStats.gf)) {
+                        minMargin = m;
+                        break;
+                    }
+                }
+
+                if (minMargin !== null) {
+                    if (minMargin === 1) {
+                        parts.push(`${name} 무승부 이하`);
+                    } else {
+                        parts.push(`${name} ${minMargin - 1}골 차 이하 승리 또는 무승부 이하`);
+                    }
                 }
             }
         });
