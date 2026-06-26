@@ -77,6 +77,13 @@
         { min: 0,   label: '탈락',  key: 'eliminated', img: 'assets/images/hong-eliminated.png' },
     ];
 
+    function isGameFinished(game) {
+        if (!game) return false;
+        return String(game.finished).toUpperCase() === 'TRUE' || 
+               game.finished === true || 
+               String(game.time_elapsed).toLowerCase() === 'finished';
+    }
+
     // ===== Mock Game Matches Data =====
     const MOCK_GAMES = [
         { id: '63', group: 'G', home_team_id: '26', away_team_id: '27', home_team_name_en: 'Egypt', away_team_name_en: 'Iran', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/26/2026 20:00', type: 'group' },
@@ -421,6 +428,35 @@
             team.gd = String(parseInt(team.gd) + (gf - ga));
         }
 
+        // 0. 실제 완료된 경기가 groups 순위 데이터에 아직 미반영된 경우, 강제로 동적 누적 반영
+        simGames.forEach(game => {
+            if (game.type !== 'group') return;
+            if (!isGameFinished(game)) return;
+
+            const group = simGroups.find(g => g.name === game.group);
+            if (!group) return;
+
+            const homeTeam = group.teams.find(t => t.team_id === game.home_team_id);
+            const awayTeam = group.teams.find(t => t.team_id === game.away_team_id);
+            if (!homeTeam || !awayTeam) return;
+
+            // 이미 치러진 경기인데 groups 상의 mp가 아직 3미만(즉, 2이하)으로 업데이트 미반영된 경우
+            if (parseInt(homeTeam.mp) < 3 || parseInt(awayTeam.mp) < 3) {
+                const homeScore = parseInt(game.home_score || '0');
+                const awayScore = parseInt(game.away_score || '0');
+                const homePts = homeScore > awayScore ? 3 : (homeScore === awayScore ? 1 : 0);
+                const awayPts = awayScore > homeScore ? 3 : (homeScore === awayScore ? 1 : 0);
+
+                if (parseInt(homeTeam.mp) < 3) {
+                    updateTeamStats(group, game.home_team_id, homePts, homeScore, awayScore);
+                }
+                if (parseInt(awayTeam.mp) < 3) {
+                    updateTeamStats(group, game.away_team_id, awayPts, awayScore, homeScore);
+                }
+                addLog(`⚡ 실시간 보정: 종료된 실제 경기 [${game.group}조] ${TEAM_DB[game.home_team_id]?.ko || game.home_team_id} vs ${TEAM_DB[game.away_team_id]?.ko || game.away_team_id} (${homeScore}-${awayScore}) 결과를 조별 순위에 선반영`);
+            }
+        });
+
         // 1. Find Korea's stats
         const koreaGroup = simGroups.find(g => g.name === KOREA_GROUP);
         const koreaTeam = koreaGroup.teams.find(t => t.team_id === KOREA_TEAM_ID);
@@ -509,7 +545,7 @@
 
     // ===== Run 9-Outcome Group Simulation =====
     function runGroupSimulation(group, currentSortedTeams, simGames) {
-        const groupGames = simGames.filter(g => g.group === group.name && g.finished !== 'TRUE');
+        const groupGames = simGames.filter(g => g.group === group.name && !isGameFinished(g));
         if (groupGames.length === 0) {
             return [];
         }
@@ -1167,10 +1203,11 @@
             const startTimeMs = getGameStartTimeMs(game);
             if (startTimeMs === 0) return false;
 
+            const isFinished = isGameFinished(game);
             const isBeforeGame = nowMs >= (startTimeMs - FIVE_MINUTES_MS) && nowMs < startTimeMs;
-            const isLive = game.finished !== 'TRUE' && nowMs >= startTimeMs && nowMs < (startTimeMs + 120 * 60 * 1000);
-            const isJustFinished = game.finished === 'TRUE' && nowMs >= startTimeMs && nowMs <= (startTimeMs + END_THRESHOLD_MS);
-            const isLiveState = game.finished === 'FALSE' && game.time_elapsed !== 'notstarted';
+            const isLive = !isFinished && nowMs >= startTimeMs && nowMs < (startTimeMs + 120 * 60 * 1000);
+            const isJustFinished = isFinished && nowMs >= startTimeMs && nowMs <= (startTimeMs + END_THRESHOLD_MS);
+            const isLiveState = !isFinished && game.time_elapsed !== 'notstarted';
 
             return isBeforeGame || isLive || isJustFinished || isLiveState;
         });
@@ -1185,12 +1222,12 @@
             return `<span class="status-badge badge-finished">종료</span>`;
         }
 
-        const groupGames = simGames.filter(g => g.group === groupName && g.finished !== 'TRUE');
+        const groupGames = simGames.filter(g => g.group === groupName && !isGameFinished(g));
         if (groupGames.length === 0) {
             return `<span class="status-badge badge-finished">종료</span>`;
         }
         
-        const liveGame = groupGames.find(g => g.time_elapsed !== 'notstarted' && g.finished === 'FALSE');
+        const liveGame = groupGames.find(g => g.time_elapsed !== 'notstarted' && !isGameFinished(g));
         if (liveGame) {
             return `<span class="status-badge badge-live">경기 중 (${liveGame.time_elapsed}')</span>`;
         }
@@ -1296,7 +1333,7 @@
     function renderScenarioPanel(thirdPlaceTeams, simGames) {
         scenarioMatchList.innerHTML = '';
         
-        const upcomingGames = simGames.filter(g => g.type === 'group' && g.finished !== 'TRUE');
+        const upcomingGames = simGames.filter(g => g.type === 'group' && !isGameFinished(g));
         
         if (upcomingGames.length === 0) {
             scenarioMatchList.innerHTML = '<p class="scenario-subtitle" style="text-align:center; padding:10px;">잔여 경기가 없거나 모두 가상 결과가 입력되었습니다.</p>';
@@ -1380,7 +1417,7 @@
             coachImg.style.opacity = '0';
             coachImg.style.transform = 'scale(0.9)';
             setTimeout(() => {
-                coachImg.src = stage.img + '?v=20260627_caricature';
+                coachImg.src = stage.img + '?v=20260627_caricature_v4';
                 coachImg.onload = () => {
                     coachImg.style.opacity = '1';
                     coachImg.style.transform = 'scale(1)';
