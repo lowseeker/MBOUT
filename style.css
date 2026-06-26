@@ -1024,8 +1024,8 @@ body {
 .simulator-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px 14px;
-    font-size: 0.74rem;
+    gap: 5px 8px;
+    font-size: 0.7rem;
     max-height: 130px;
     overflow-y: auto;
 }
@@ -1035,8 +1035,8 @@ body {
     align-items: center;
     justify-content: space-between;
     background: #f9fafb;
-    padding: 3px 6px;
-    border-radius: 6px;
+    padding: 2px 4px;
+    border-radius: 4px;
     border: 1px solid var(--border-light);
 }
 
@@ -1044,7 +1044,7 @@ body {
     font-weight: 700;
     color: var(--korea-blue);
     font-family: var(--font-en);
-    margin-right: 2px;
+    margin-right: 1px;
 }
 
 .sim-team {
@@ -1052,8 +1052,8 @@ body {
     align-items: center;
     gap: 2px;
     font-weight: 600;
-    width: 65px;
-    font-size: 0.72rem;
+    width: 60px;
+    font-size: 0.68rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1070,14 +1070,14 @@ body {
 }
 
 .sim-score-input {
-    width: 22px;
-    height: 18px;
+    width: 20px;
+    height: 16px;
     text-align: center;
     border: 1px solid var(--border-medium);
-    border-radius: 3px;
+    border-radius: 2px;
     font-family: var(--font-en);
     font-weight: 700;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     background: #ffffff;
 }
 
@@ -1090,8 +1090,8 @@ body {
 .sim-vs {
     color: var(--text-muted);
     font-weight: 600;
-    margin: 0 2px;
-    font-size: 0.68rem;
+    margin: 0 1px;
+    font-size: 0.64rem;
 }
 
 /* ===== Animations ===== */

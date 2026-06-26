@@ -252,7 +252,14 @@
     function renderSimulatorList() {
         if (!allGamesData) return;
 
-        const upcomingGames = allGamesData.games.filter(g => g.type === 'group' && g.finished !== 'TRUE');
+        const upcomingGames = allGamesData.games.filter(g => {
+            if (g.type !== 'group') return false;
+            const isFinished = 
+                String(g.finished).toUpperCase() === 'TRUE' || 
+                g.finished === true || 
+                String(g.time_elapsed).toLowerCase() === 'finished';
+            return !isFinished;
+        });
         
         upcomingGames.sort((a, b) => {
             if (a.group !== b.group) return a.group.localeCompare(b.group);
