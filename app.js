@@ -292,10 +292,10 @@
                     { team_id: '4', mp: '3', pts: '1', gd: '-4', gf: '2' }
                 ]},
                 { name: 'B', teams: [
-                    { team_id: '5', mp: '3', pts: '7', gd: '3', gf: '5' },
-                    { team_id: '6', mp: '3', pts: '4', gd: '-1', gf: '5' },
-                    { team_id: '7', mp: '3', pts: '3', gd: '-1', gf: '3' },
-                    { team_id: '8', mp: '3', pts: '1', gd: '-1', gf: '2' }
+                    { team_id: '8', mp: '3', pts: '7', gd: '4', gf: '7' },
+                    { team_id: '5', mp: '3', pts: '4', gd: '5', gf: '6' },
+                    { team_id: '6', mp: '3', pts: '4', gd: '-2', gf: '4' },
+                    { team_id: '7', mp: '3', pts: '1', gd: '-7', gf: '2' }
                 ]},
                 { name: 'C', teams: [
                     { team_id: '9', mp: '3', pts: '9', gd: '4', gf: '5' },
