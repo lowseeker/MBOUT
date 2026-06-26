@@ -1204,7 +1204,57 @@ body {
 }
 
 @media (max-width: 768px) {
+    html, body {
+        height: auto;
+        overflow: auto; /* Allow scrolling page-wide on mobile */
+    }
+
+    .dashboard-container {
+        height: auto;
+        overflow: visible;
+        padding: 10px;
+    }
+
+    .top-dashboard {
+        grid-template-columns: 1fr; /* Stack layout vertically */
+        height: auto;
+    }
+
+    .left-dashboard-column {
+        height: auto;
+    }
+
+    .standings-section {
+        height: auto;
+        min-height: 450px;
+    }
+
+    .table-wrapper {
+        overflow-y: visible; /* Use page-wide scroll instead of inner scroll */
+    }
+
     .timezone-clocks {
         display: none; /* Hide dual clock on mobile to save space */
+    }
+
+    /* Mobile Table Tuning */
+    .standings-table {
+        font-size: 0.72rem;
+    }
+
+    .standings-table th, 
+    .standings-table td {
+        padding: 5px 3px;
+    }
+
+    .col-rank { width: 35px; }
+    .col-group { width: 35px; }
+    .col-points, .col-gd, .col-gf { width: 35px; }
+    .col-condition { min-width: 180px; }
+
+    .team-flag-img {
+        width: 15px;
+        height: 10px;
+        margin-right: 2px;
     }
 }
