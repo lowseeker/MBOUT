@@ -90,8 +90,8 @@
         { id: '64', group: 'G', home_team_id: '28', away_team_id: '25', home_team_name_en: 'New Zealand', away_team_name_en: 'Belgium', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/26/2026 20:00', type: 'group' },
         { id: '65', group: 'H', home_team_id: '30', away_team_id: '31', home_team_name_en: 'Cape Verde', away_team_name_en: 'Saudi Arabia', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/26/2026 19:00', type: 'group' },
         { id: '66', group: 'H', home_team_id: '32', away_team_id: '29', home_team_name_en: 'Uruguay', away_team_name_en: 'Spain', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/26/2026 18:00', type: 'group' },
-        { id: '67', group: 'I', home_team_id: '34', away_team_id: '35', home_team_name_en: 'Senegal', away_team_name_en: 'Iraq', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/26/2026 15:00', type: 'group' },
-        { id: '68', group: 'I', home_team_id: '36', away_team_id: '33', home_team_name_en: 'Norway', away_team_name_en: 'France', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/26/2026 15:00', type: 'group' },
+        { id: '67', group: 'I', home_team_id: '34', away_team_id: '35', home_team_name_en: 'Senegal', away_team_name_en: 'Iraq', finished: 'TRUE', time_elapsed: 'finished', home_score: '5', away_score: '0', local_date: '06/26/2026 15:00', type: 'group' },
+        { id: '68', group: 'I', home_team_id: '36', away_team_id: '33', home_team_name_en: 'Norway', away_team_name_en: 'France', finished: 'TRUE', time_elapsed: 'finished', home_score: '1', away_score: '4', local_date: '06/26/2026 15:00', type: 'group' },
         { id: '69', group: 'J', home_team_id: '38', away_team_id: '39', home_team_name_en: 'Algeria', away_team_name_en: 'Austria', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/27/2026 21:00', type: 'group' },
         { id: '70', group: 'J', home_team_id: '40', away_team_id: '37', home_team_name_en: 'Jordan', away_team_name_en: 'Argentina', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/27/2026 21:00', type: 'group' },
         { id: '71', group: 'K', home_team_id: '42', away_team_id: '43', home_team_name_en: 'DR Congo', away_team_name_en: 'Uzbekistan', finished: 'FALSE', time_elapsed: 'notstarted', local_date: '06/27/2026 19:30', type: 'group' },
@@ -341,10 +341,10 @@
                     { team_id: '32', mp: '2', pts: '1', gd: '-1', gf: '2' }
                 ]},
                 { name: 'I', teams: [
-                    { team_id: '33', mp: '2', pts: '6', gd: '4', gf: '5' },
-                    { team_id: '36', mp: '2', pts: '4', gd: '1', gf: '3' },
-                    { team_id: '34', mp: '2', pts: '1', gd: '-2', gf: '2' },
-                    { team_id: '35', mp: '2', pts: '0', gd: '-3', gf: '1' }
+                    { team_id: '33', mp: '3', pts: '9', gd: '7', gf: '9' },
+                    { team_id: '34', mp: '3', pts: '4', gd: '3', gf: '7' },
+                    { team_id: '36', mp: '3', pts: '4', gd: '-2', gf: '4' },
+                    { team_id: '35', mp: '3', pts: '0', gd: '-8', gf: '1' }
                 ]},
                 { name: 'J', teams: [
                     { team_id: '37', mp: '2', pts: '6', gd: '4', gf: '5' },
@@ -394,10 +394,16 @@
             const game = simGames.find(g => g.id === gameId);
             if (!game) return;
 
+            // 중복 방지: 이 경기가 이미 실제 종료된 경기라면, predictions 덮어쓰기만 허용하고 순위에 중복 누적하지 않음.
+            const originalGame = allGamesData.games.find(g => g.id === gameId);
+            const wasFinished = originalGame && isGameFinished(originalGame);
+
             game.finished = 'TRUE';
             game.home_score = String(pred.homeScore);
             game.away_score = String(pred.awayScore);
             game.time_elapsed = 'finished';
+
+            if (wasFinished) return;
 
             const group = simGroups.find(g => g.name === game.group);
             if (!group) return;
@@ -418,43 +424,45 @@
             const d = pts === 1 ? 1 : 0;
             const l = pts === 0 ? 1 : 0;
 
-            team.mp = String(parseInt(team.mp) + 1);
-            team.w = String(parseInt(team.w) + w);
-            team.d = String(parseInt(team.d) + d);
-            team.l = String(parseInt(team.l) + l);
-            team.pts = String(parseInt(team.pts) + pts);
-            team.gf = String(parseInt(team.gf) + gf);
-            team.ga = String(parseInt(team.ga) + ga);
-            team.gd = String(parseInt(team.gd) + (gf - ga));
+            team.mp = String(parseInt(team.mp || '0') + 1);
+            team.w = String(parseInt(team.w || '0') + w);
+            team.d = String(parseInt(team.d || '0') + d);
+            team.l = String(parseInt(team.l || '0') + l);
+            team.pts = String(parseInt(team.pts || '0') + pts);
+            team.gf = String(parseInt(team.gf || '0') + gf);
+            team.ga = String(parseInt(team.ga || '0') + ga);
+            team.gd = String(parseInt(team.gd || '0') + (gf - ga));
         }
 
         // 0. 실제 완료된 경기가 groups 순위 데이터에 아직 미반영된 경우, 강제로 동적 누적 반영
-        simGames.forEach(game => {
-            if (game.type !== 'group') return;
-            if (!isGameFinished(game)) return;
+        // ⚠️ groups API의 mp가 이미 1·2차전을 반영하고 있으므로, 이미 반영된 경기를 다시 누적하면 안 됨.
+        // 각 팀별로 "API groups에서 이미 반영된 경기 수(mp)"와 "완료된 경기 수"를 비교하여 미반영분만 보정.
+        simGroups.forEach(group => {
+            // 이 조의 실제 완료된 경기를 날짜순 정렬 (원본 데이터 기준 - 예측 제외)
+            const finishedGames = allGamesData.games.filter(g => g.group === group.name && g.type === 'group' && isGameFinished(g));
+            finishedGames.sort((a, b) => new Date(a.local_date) - new Date(b.local_date));
 
-            const group = simGroups.find(g => g.name === game.group);
-            if (!group) return;
+            group.teams.forEach(team => {
+                const currentMp = parseInt(team.mp || '0');
+                // 이 팀이 참여한 완료 경기 목록
+                const teamFinishedGames = finishedGames.filter(g => g.home_team_id === team.team_id || g.away_team_id === team.team_id);
+                
+                if (teamFinishedGames.length <= currentMp) return; // 미반영분 없음
 
-            const homeTeam = group.teams.find(t => t.team_id === game.home_team_id);
-            const awayTeam = group.teams.find(t => t.team_id === game.away_team_id);
-            if (!homeTeam || !awayTeam) return;
+                // 최신 경기부터 미반영분만 보정 (이미 반영된 경기 수를 건너뜀)
+                const unreflectedGames = teamFinishedGames.slice(currentMp);
+                unreflectedGames.forEach(game => {
+                    const homeScore = parseInt(game.home_score || '0');
+                    const awayScore = parseInt(game.away_score || '0');
+                    const isHome = game.home_team_id === team.team_id;
+                    const teamGf = isHome ? homeScore : awayScore;
+                    const teamGa = isHome ? awayScore : homeScore;
+                    const pts = teamGf > teamGa ? 3 : (teamGf === teamGa ? 1 : 0);
 
-            // 이미 치러진 경기인데 groups 상의 mp가 아직 3미만(즉, 2이하)으로 업데이트 미반영된 경우
-            if (parseInt(homeTeam.mp) < 3 || parseInt(awayTeam.mp) < 3) {
-                const homeScore = parseInt(game.home_score || '0');
-                const awayScore = parseInt(game.away_score || '0');
-                const homePts = homeScore > awayScore ? 3 : (homeScore === awayScore ? 1 : 0);
-                const awayPts = awayScore > homeScore ? 3 : (homeScore === awayScore ? 1 : 0);
-
-                if (parseInt(homeTeam.mp) < 3) {
-                    updateTeamStats(group, game.home_team_id, homePts, homeScore, awayScore);
-                }
-                if (parseInt(awayTeam.mp) < 3) {
-                    updateTeamStats(group, game.away_team_id, awayPts, awayScore, homeScore);
-                }
-                addLog(`⚡ 실시간 보정: 종료된 실제 경기 [${game.group}조] ${TEAM_DB[game.home_team_id]?.ko || game.home_team_id} vs ${TEAM_DB[game.away_team_id]?.ko || game.away_team_id} (${homeScore}-${awayScore}) 결과를 조별 순위에 선반영`);
-            }
+                    updateTeamStats(group, team.team_id, pts, teamGf, teamGa);
+                    addLog(`⚡ 실시간 보정: [${group.name}조] ${TEAM_DB[team.team_id]?.ko || team.team_id} 미반영 경기 (${homeScore}-${awayScore}) 결과 선반영`);
+                });
+            });
         });
 
         // 1. Find Korea's stats
@@ -490,7 +498,10 @@
                 return parseInt(b.gf) - parseInt(a.gf);
             });
 
-            const isGroupFinished = sorted.every(t => parseInt(t.mp) >= 3);
+            // isGroupFinished: 실제 경기가 모두 종료되었는지 확인 (예측으로 mp가 올라간 경우는 제외)
+            // ⚠️ allGamesData.games (원본) 기준으로 확인 - simGames는 예측이 적용되어 finished=TRUE로 변경됨
+            const originalGroupGames = allGamesData.games.filter(g => g.group === group.name && g.type === 'group');
+            const isGroupFinished = originalGroupGames.length > 0 && originalGroupGames.every(g => isGameFinished(g));
             const thirdTeam = sorted[2]; // 3rd place (0-indexed)
 
             if (group.name === KOREA_GROUP) {
@@ -518,17 +529,39 @@
                         possibleThirds: null,
                     });
                 } else {
-                    const possibles = runGroupSimulation(group, sorted, simGames);
-                    thirdPlaceTeams.push({
-                        team_id: thirdTeam.team_id,
-                        group: group.name,
-                        pts: parseInt(thirdTeam.pts),
-                        gd: parseInt(thirdTeam.gd),
-                        gf: parseInt(thirdTeam.gf),
-                        isKorea: false,
-                        isFinished: false,
-                        possibleThirds: possibles,
-                    });
+                    // 예측이 적용된 경기를 확인: 원본에서 미완료 경기가 simGames에서는 완료 처리된 경우
+                    const originalUnfinished = originalGroupGames.filter(g => !isGameFinished(g));
+                    const simGroupGames = simGames.filter(g => g.group === group.name && g.type === 'group');
+                    const simAllFinished = simGroupGames.length > 0 && simGroupGames.every(g => isGameFinished(g));
+                    const isPredicted = originalUnfinished.length > 0 && simAllFinished;
+
+                    if (isPredicted) {
+                        // 예측으로 모든 경기가 완료 처리됨 → 예측 기반 결과로 비교하되, '예측' 표시
+                        thirdPlaceTeams.push({
+                            team_id: thirdTeam.team_id,
+                            group: group.name,
+                            pts: parseInt(thirdTeam.pts),
+                            gd: parseInt(thirdTeam.gd),
+                            gf: parseInt(thirdTeam.gf),
+                            isKorea: false,
+                            isFinished: false,
+                            isPredicted: true,
+                            possibleThirds: null,
+                        });
+                    } else {
+                        const possibles = runGroupSimulation(group, sorted, simGames);
+                        thirdPlaceTeams.push({
+                            team_id: thirdTeam.team_id,
+                            group: group.name,
+                            pts: parseInt(thirdTeam.pts),
+                            gd: parseInt(thirdTeam.gd),
+                            gf: parseInt(thirdTeam.gf),
+                            isKorea: false,
+                            isFinished: false,
+                            isPredicted: false,
+                            possibleThirds: possibles,
+                        });
+                    }
                 }
             }
         });
@@ -696,11 +729,40 @@
                         text: getDefeatConditionText(team)
                     });
                 }
+            } else if (team.isPredicted) {
+                // 예측이 적용된 그룹: 예측 결과 기반으로 비교하되, "예측" 상태로 표시
+                const cmp = compareWithKorea(team);
+                if (cmp === 'above') {
+                    teamsAbove++;
+                    groupAheadProbabilities.push(0);
+                    conditions.push({
+                        team_id: team.team_id,
+                        group: team.group,
+                        status: 'above',
+                        met: false,
+                        settled: false,
+                        isPredicted: true,
+                        text: `🔮 예측 결과: 승점 ${team.pts}, 득실차 ${team.gd > 0 ? '+' : ''}${team.gd}, 다득점 ${team.gf} → 한국보다 상위`
+                    });
+                } else {
+                    teamsBelow++;
+                    groupAheadProbabilities.push(1);
+                    conditions.push({
+                        team_id: team.team_id,
+                        group: team.group,
+                        status: 'below',
+                        met: true,
+                        settled: false,
+                        isPredicted: true,
+                        text: `🔮 예측 결과: ${getDefeatConditionText(team)}`
+                    });
+                }
             } else {
+                const possibleThirds = team.possibleThirds || [];
                 let totalGroupScenarios = 0;
                 let koreaWinsScenarios = 0;
                 
-                team.possibleThirds.forEach(candidate => {
+                possibleThirds.forEach(candidate => {
                     totalGroupScenarios += candidate.scenariosCount;
                     koreaWinsScenarios += candidate.wins;
                 });
@@ -710,7 +772,7 @@
 
                 if (probAhead === 1) {
                     let canChase = false;
-                    team.possibleThirds.forEach(cand => {
+                    possibleThirds.forEach(cand => {
                         const rem = 3 - cand.mp;
                         const maxPts = cand.currentPts + rem * 3;
                         if (maxPts >= koreaStats.pts) {
@@ -986,16 +1048,25 @@
             tdCond.classList.add('col-condition');
             
             if (team.isKorea) {
-                tdCond.innerHTML = `<span class="cond-korea">— (한국 성적: 3점, 득실차 -1, 다득점 2)</span>`;
+                tdCond.innerHTML = `<span class="cond-korea">— (한국 성적: ${koreaStats.pts}점, 득실차 ${koreaStats.gd > 0 ? '+' : ''}${koreaStats.gd}, 다득점 ${koreaStats.gf})</span>`;
             } else if (team.isFinished) {
                 const textClass = cond.met === true ? 'text-met' : 'text-failed';
                 const icon = cond.met === true ? '✅' : '❌';
                 const statusLabel = cond.met === true ? '충족' : '실패';
                 tdCond.innerHTML = `<div class="cond-simple-text ${textClass}">${icon} <strong>${statusLabel}</strong>: ${cond.text}</div>`;
             } else if (cond) {
-                const condClass = cond.met === true ? 'cond-met' : cond.met === false ? 'cond-failed' : 'cond-pending';
-                const icon = cond.met === true ? '✅' : cond.met === false ? '❌' : '⏳';
-                const statusLabel = cond.met === true ? '충족' : cond.met === false ? '실패' : '미확정';
+                const isPred = cond.isPredicted;
+                let condClass, icon, statusLabel;
+                if (isPred) {
+                    // 예측 기반 결과: 경기 미완료지만 시뮬레이터에서 예측값이 입력됨
+                    condClass = cond.met === true ? 'cond-met' : 'cond-failed';
+                    icon = '🔮';
+                    statusLabel = cond.met === true ? '예측 충족' : '예측 실패';
+                } else {
+                    condClass = cond.met === true ? 'cond-met' : cond.met === false ? 'cond-failed' : 'cond-pending';
+                    icon = cond.met === true ? '✅' : cond.met === false ? '❌' : '⏳';
+                    statusLabel = cond.met === true ? '충족' : cond.met === false ? '실패' : '미확정';
+                }
                 
                 let condHtml = `<div class="cond-wrapper ${condClass}">`;
                 condHtml += `<div class="cond-status">${icon} <strong>${statusLabel}</strong></div>`;
@@ -1051,9 +1122,17 @@
                             const statusLabel = cond.met === true ? '충족' : '실패';
                             condHtml = `<div class="mobile-cond-container cond-simple-text ${textClass}">${icon} <strong>${statusLabel}</strong>: ${cond.text}</div>`;
                         } else if (cond) {
-                            const condClass = cond.met === true ? 'cond-met' : cond.met === false ? 'cond-failed' : 'cond-pending';
-                            const icon = cond.met === true ? '✅' : cond.met === false ? '❌' : '⏳';
-                            const statusLabel = cond.met === true ? '충족' : cond.met === false ? '실패' : '미확정';
+                            const isPred = cond.isPredicted;
+                            let condClass, icon, statusLabel;
+                            if (isPred) {
+                                condClass = cond.met === true ? 'cond-met' : 'cond-failed';
+                                icon = '🔮';
+                                statusLabel = cond.met === true ? '예측 충족' : '예측 실패';
+                            } else {
+                                condClass = cond.met === true ? 'cond-met' : cond.met === false ? 'cond-failed' : 'cond-pending';
+                                icon = cond.met === true ? '✅' : cond.met === false ? '❌' : '⏳';
+                                statusLabel = cond.met === true ? '충족' : cond.met === false ? '실패' : '미확정';
+                            }
 
                             condHtml = `<div class="mobile-cond-container cond-wrapper ${condClass}">`;
                             condHtml += `<div class="cond-status">${icon} <strong>${statusLabel}</strong></div>`;
@@ -1222,17 +1301,28 @@
             return `<span class="status-badge badge-finished">종료</span>`;
         }
 
-        const groupGames = simGames.filter(g => g.group === groupName && !isGameFinished(g));
-        if (groupGames.length === 0) {
+        // 원본 게임 데이터 기준으로 상태 판정 (예측으로 finished 처리된 경기 제외)
+        const originalGames = allGamesData.games.filter(g => g.group === groupName && g.type === 'group');
+        const originalUnfinished = originalGames.filter(g => !isGameFinished(g));
+        
+        // 모든 원본 경기가 완료된 경우
+        if (originalUnfinished.length === 0) {
             return `<span class="status-badge badge-finished">종료</span>`;
         }
+
+        // 시뮬레이션에서 예측이 적용되어 모든 경기가 완료 처리된 경우
+        const simGroupGames = simGames.filter(g => g.group === groupName && g.type === 'group');
+        const simAllFinished = simGroupGames.length > 0 && simGroupGames.every(g => isGameFinished(g));
+        if (simAllFinished) {
+            return `<span class="status-badge badge-predicted">🔮 예측</span>`;
+        }
         
-        const liveGame = groupGames.find(g => g.time_elapsed !== 'notstarted' && !isGameFinished(g));
+        const liveGame = originalUnfinished.find(g => g.time_elapsed !== 'notstarted' && !isGameFinished(g));
         if (liveGame) {
             return `<span class="status-badge badge-live">경기 중 (${liveGame.time_elapsed}')</span>`;
         }
         
-        const scheduledGames = groupGames.filter(g => g.time_elapsed === 'notstarted');
+        const scheduledGames = originalUnfinished.filter(g => g.time_elapsed === 'notstarted');
         if (scheduledGames.length > 0) {
             scheduledGames.sort((a, b) => new Date(a.local_date) - new Date(b.local_date));
             const nextGame = scheduledGames[0];
