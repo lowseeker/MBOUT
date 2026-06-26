@@ -316,7 +316,7 @@
         const homeVal = homeInput.value.trim();
         const awayVal = awayInput.value.trim();
 
-        const game = allGamesData.games.find(g => g.id === gameId);
+        const game = allGamesData.games.find(g => String(g.id) === String(gameId));
         const homeName = TEAM_DB[game.home_team_id]?.ko || game.home_team_name_en;
         const awayName = TEAM_DB[game.away_team_id]?.ko || game.away_team_name_en;
 

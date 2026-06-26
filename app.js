@@ -391,11 +391,11 @@
         // Apply predictions to simulated group stats
         Object.keys(predictions).forEach(gameId => {
             const pred = predictions[gameId];
-            const game = simGames.find(g => g.id === gameId);
+            const game = simGames.find(g => String(g.id) === String(gameId));
             if (!game) return;
 
             // 중복 방지: 이 경기가 이미 실제 종료된 경기라면, predictions 덮어쓰기만 허용하고 순위에 중복 누적하지 않음.
-            const originalGame = allGamesData.games.find(g => g.id === gameId);
+            const originalGame = allGamesData.games.find(g => String(g.id) === String(gameId));
             const wasFinished = originalGame && isGameFinished(originalGame);
 
             game.finished = 'TRUE';
